@@ -1,0 +1,174 @@
+%YAML 1.2
+---
+name: MCore
+file_extensions:
+  - mc
+scope: source.mcore
+
+variables:
+  builtin_ident: 'unit|not|and|or|addi|subi|muli|divi|modi|negi|lti|leqi|gti|geqi|eqi|neqi|slli|srli|srai|arity|addf|subf|mulf|divf|negf|ltf|leqf|gtf|geqf|eqf|neqf|char2int|int2char|makeseq|length|concat|nth|cons|slice|reverse|print|dprint|argv|readFile|writeFile|fileExists|deleteFile|error'
+  ident: '[a-zA-Z_][a-zA-Z_0-9]*'
+  escapechar: '\\([?abfnrtv"\\]|'')'
+
+contexts:
+  main:
+    - include: global
+
+  global:
+    - include: comment
+    - include: expression
+
+  expression:
+    - include: ifstmt
+    - include: matchstmt
+    - include: lam
+    - include: let
+    - include: data
+    - include: utest
+    - include: constant
+    - include: identifier
+
+  constant:
+    - include: float
+    - include: integer
+    - include: boolean
+    - include: string
+    - include: character
+    - include: unit-constant
+
+  comment:
+    - match: //
+      push:
+        - meta_scope: comment.line.double-slash.mcore
+        - match: \n
+          pop: true
+
+  let:
+    - match: '\b(let)\b\s+({{ident}})\s*(=)\s*'
+      captures:
+        1: keyword.other.let.mcore
+        2: variable.identifier.mcore
+        3: keyword.operator.assignment.mcore
+      push:
+        - meta_scope: expression.let.mcore
+        - match: '\b(in)\b'
+          captures:
+            1: keyword.directive.in.mcore
+          pop: true
+        - include: main
+
+  data:
+    - match: '\b(data)\b\s+{{ident}}\s+\b(in)\b'
+      captures:
+        1: keyword.other.data.mcore
+        2: keyword.directive.in.mcore
+
+  utest:
+    - match: '\b(utest)\b\s+'
+      captures:
+        1: keyword.other.utest.mcore
+      push:
+        - match: '\b(with)\b'
+          captures:
+            1: keyword.directive.with.mcore
+          set:
+            - match: '\b(in)\b'
+              captures:
+                1: keyword.directive.in.mcore
+              pop: true
+            - include: main
+        - include: main
+
+  lam:
+    - match: '\b(lam)\b\s+({{ident}})\s*([.])'
+      captures:
+        1: keyword.operator.lam.mcore
+        3: keyword.operator.lamdot.mcore
+
+  ifstmt:
+    - match: '\b(if)\b'
+      captures:
+        1: keyword.control.if.mcore
+      push:
+        - match: '\b(then)\b'
+          captures:
+            1: keyword.control.then.mcore
+          set:
+            - match: '\b(else)\b'
+              captures:
+                1: keyword.control.else.mcore
+              pop: true
+            - include: main
+        - include: main
+
+  matchstmt:
+    - match: '\b(match)\b'
+      captures:
+        1: keyword.control.match.mcore
+      push:
+        - match: '\b(with)\b'
+          captures:
+            1: keyword.control.with.mcore
+          set:
+            - match: '{{ident}}\s+{{ident}}\s+\b(then)\b'
+              captures:
+                1: keyword.control.then.mcore
+              set:
+                - match: '\b(else)\b'
+                  captures:
+                    1: keyword.control.else.mcore
+                  pop: true
+                - include: main
+        - include: main
+
+  identifier:
+    - match: '\b({{builtin_ident}})\b'
+      captures:
+        1: support.function.builtin.ident.mcore
+    - match: '\b{{ident}}\b'
+      scope: other.ident.mcore
+
+  integer:
+    - match: '(-)?[0-9]+'
+      scope: constant.numeric.integer.mcore
+
+  float:
+    - match: '(-)?[0-9]([.][0-9]+)?(e|E)(\+|-)?[0-9]+'
+      scope: constant.numeric.float.stdform.mcore
+    - match: '(-)?[0-9][.][0-9]+'
+      scope: constant.numeric.float.normal.mcore
+
+  boolean:
+    - match: '(true|false)'
+      scope: constant.language.mcore
+
+  unit-constant:
+    - match: '[(][)]'
+      scope: constant.language.mcore
+
+  string:
+    - match: '(")'
+      captures:
+        1: string.quote.double.mcore
+      push:
+        - match: '(")'
+          captures:
+            1: string.quote.double.mcore
+          pop: true
+        - include: stringsymbol
+
+  stringsymbol:
+    - match: '{{escapechar}}'
+      scope: constant.character.escape.mcore
+    - match: '[^"\\]'
+      scope: string.character.mcore
+
+  character:
+    - match: '('')({{escapechar}})('')'
+      captures:
+        1: string.quote.single.mcore
+        2: constant.character.escape.mcore
+        3: constant.character.escape.mcore
+        4: string.quote.single.mcore
+    - match: '('')([^''\\])('')'
+      scope: string.quote.single.mcore
