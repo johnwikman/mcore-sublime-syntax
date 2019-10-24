@@ -7,7 +7,7 @@ scope: source.mcore
 
 variables:
   builtin_ident: 'unit|not|and|or|addi|subi|muli|divi|modi|negi|lti|leqi|gti|geqi|eqi|neqi|slli|srli|srai|arity|addf|subf|mulf|divf|negf|ltf|leqf|gtf|geqf|eqf|neqf|char2int|int2char|makeseq|length|concat|nth|cons|slice|reverse|print|dprint|argv|readFile|writeFile|fileExists|deleteFile|error'
-  reserved_ident: 'if|then|else|let|match|with|lang'
+  reserved_ident: 'if|then|else|let|match|with|lang|con|use|in|case|utest|lam'
   ident: '[a-zA-Z_][a-zA-Z_0-9]*'
   escapechar: '\\([?abfnrtv"\\]|'')'
 
@@ -29,20 +29,26 @@ contexts:
     - include: let
     - include: ifexpr
     - include: matchexpr
+    - include: fix
     - include: lam
+    - include: use
     - include: con
     - include: utest
     - include: constant
+    - include: parenthesis
     - include: identifier
 
   mexpr-pushed:
     - include: let-pushed
     - include: ifexpr-pushed
     - include: matchexpr-pushed
+    - include: fix-pushed
     - include: lam-pushed
     - include: con-pushed
+    - include: use-pushed
     - include: utest-pushed
     - include: constant-pushed
+    - include: parenthesis-pushed
     - include: identifier-pushed
 
   constant:
@@ -154,13 +160,13 @@ contexts:
       scope: keyword.operator.case.mcore
       set: [lang-sembody-continued, lang-semarrow-pushed]
     - match: '\b(syn)\b'
-      scope: keyword.operator.syn.mcore
+      scope: keyword.directive.syn.mcore
       set: [lang-syninit, identifier-pushed]
     - match: '\b(sem)\b'
-      scope: keyword.operator.sem.mcore
+      scope: keyword.directive.sem.mcore
       set: [lang-seminit, identifier-pushed]
     - match: '\b(end)\b'
-      scope: keyword.operator.end.mcore
+      scope: keyword.directive.end.mcore
       pop: true
     - include: comment
 
@@ -169,13 +175,13 @@ contexts:
       scope: keyword.operator.case.mcore
       set: [lang-sembody-continued, lang-semarrow-pushed]
     - match: '\b(syn)\b'
-      scope: keyword.operator.syn.mcore
+      scope: keyword.directive.syn.mcore
       set: [lang-syninit, identifier-pushed]
     - match: '\b(sem)\b'
-      scope: keyword.operator.sem.mcore
+      scope: keyword.directive.sem.mcore
       set: [lang-seminit, identifier-pushed]
     - match: '\b(end)\b'
-      scope: keyword.operator.end.mcore
+      scope: keyword.directive.end.mcore
       pop: true
     - include: mexprs
 
@@ -203,7 +209,19 @@ contexts:
       pop: true
     - include: mexprs
 
-  ## DATA-EXPRESSION ##
+  ## FIX-EXPRESSION ##
+  fix:
+    - match: '\b(fix)\b'
+      scope: keyword.control.fix.mcore
+      push: [lparen-pushed]
+
+  fix-pushed:
+    - match: '\b(fix)\b'
+      scope: keyword.control.fix.mcore
+      set: [lparen-pushed]
+    - include: comment
+
+  ## CON-EXPRESSION ##
   con:
     - match: '\b(con)\b'
       scope: keyword.other.con.mcore
@@ -216,6 +234,24 @@ contexts:
     - include: comment
 
   con-in-pushed:
+    - match: '\b(in)\b'
+      scope: keyword.directive.in.mcore
+      pop: true
+    - include: comment
+
+  ## USE-EXPRESSION ##
+  use:
+    - match: '\b(use)\b'
+      scope: keyword.other.use.mcore
+      push: [use-in-pushed, identifier-pushed]
+
+  use-pushed:
+    - match: '\b(use)\b'
+      scope: keyword.other.use.mcore
+      set: [use-in-pushed, identifier-pushed]
+    - include: comment
+
+  use-in-pushed:
     - match: '\b(in)\b'
       scope: keyword.directive.in.mcore
       pop: true
@@ -321,6 +357,10 @@ contexts:
   identifier:
     - match: '\b({{builtin_ident}})\b'
       scope: support.function.builtin.ident.mcore
+    - match: '\b({{reserved_ident}})\b'
+      scope: invalid.illegal.reserved.ident.mcore
+    - match: '\b(_)\b'
+      scope: keyword.other.ignored.ident.mcore
     - match: '\b{{ident}}\b'
       scope: other.ident.mcore
 
@@ -328,10 +368,52 @@ contexts:
     - match: '\b({{builtin_ident}})\b'
       scope: support.function.builtin.ident.mcore
       pop: true
+    - match: '\b({{reserved_ident}})\b'
+      scope: invalid.illegal.reserved.ident.mcore
+      pop: true
+    - match: '\b(_)\b'
+      scope: keyword.other.ignored.ident.mcore
+      pop: true
     - match: '\b{{ident}}\b'
       scope: other.ident.mcore
       pop: true
     - include: comment
+
+  ## PARENTHESIS-EXPRESSIONS ##
+  parenthesis:
+    - include: lparen
+    - include: rparen-illegal
+
+  parenthesis-pushed:
+    - include: lparen
+    - include: rparen-illegal
+
+  lparen:
+    - match: '\('
+      scope: symbol.lparen.mcore
+      push: [rparen-pushed]
+
+  rparen-illegal:
+    - match: '\)'
+      scope: invalid.illegal.rparen.mcore
+
+  lparen-pushed:
+    - match: '\('
+      scope: symbol.lparen.mcore
+      set: [rparen-pushed]
+    - include: comment
+
+  rparen-illegal-pushed:
+    - match: '\)'
+      scope: invalid.illegal.rparen.mcore
+      pop: true
+    - include: comment
+
+  rparen-pushed:
+    - match: '\)'
+      scope: symbol.rparen.mcore
+      pop: true
+    - include: mexprs
 
   ## CONSTANT-EXPRESSIONS ##
   integer:
