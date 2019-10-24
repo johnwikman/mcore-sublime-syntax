@@ -103,6 +103,9 @@ contexts:
     - match: '\b(lang)\b'
       scope: keyword.other.lang.mcore
       set: [lang-init]
+    - match: '\b(end)\b'
+      scope: keyword.directive.end.mcore
+      pop: true
     - include: comment
     - include: mexpr-pushed
 
@@ -120,6 +123,9 @@ contexts:
     - match: '\b(lang)\b'
       scope: keyword.other.lang.mcore
       set: [lang-init, identifier-pushed]
+    - match: '\b(end)\b'
+      scope: keyword.directive.end.mcore
+      pop: true
     - include: comment
     - include: mexpr-pushed
 
@@ -146,6 +152,9 @@ contexts:
     - match: '\b(sem)\b'
       scope: keyword.directive.sem.mcore
       set: [lang-seminit, identifier-pushed]
+    - match: '\b(end)\b'
+      scope: keyword.directive.end.mcore
+      pop: true
     - include: comment
     - include: identifier
 
