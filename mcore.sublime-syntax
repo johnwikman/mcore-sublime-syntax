@@ -89,6 +89,11 @@ contexts:
       scope: keyword.other.lang.mcore
       push: [lang-init, identifier-pushed]
 
+  lang-pushed:
+    - match: '\b(lang)\b'
+      scope: keyword.other.lang.mcore
+      set: [lang-init, identifier-pushed]
+
   lang-init:
     # Check what comes after 'lang'
     - match: '(=)'
@@ -100,13 +105,11 @@ contexts:
     - match: '\b(sem)\b'
       scope: keyword.directive.sem.mcore
       set: [lang-seminit, identifier-pushed]
-    - match: '\b(lang)\b'
-      scope: keyword.other.lang.mcore
-      set: [lang-init]
     - match: '\b(end)\b'
       scope: keyword.directive.end.mcore
       pop: true
     - include: comment
+    - include: lang-pushed
     - include: mexpr-pushed
 
   lang-eqexpr:
@@ -120,13 +123,11 @@ contexts:
     - match: '\b(sem)\b'
       scope: keyword.directive.sem.mcore
       set: [lang-seminit, identifier-pushed]
-    - match: '\b(lang)\b'
-      scope: keyword.other.lang.mcore
-      set: [lang-init, identifier-pushed]
     - match: '\b(end)\b'
       scope: keyword.directive.end.mcore
       pop: true
     - include: comment
+    - include: lang-pushed
     - include: mexpr-pushed
 
   lang-syninit:
