@@ -6,7 +6,7 @@ file_extensions:
 scope: source.mcore
 
 variables:
-  builtin_ident: 'unit|not|and|or|addi|subi|muli|divi|modi|negi|lti|leqi|gti|geqi|eqi|neqi|slli|srli|srai|arity|addf|subf|mulf|divf|negf|ltf|leqf|gtf|geqf|eqf|neqf|char2int|int2char|makeseq|length|concat|nth|cons|slice|reverse|print|dprint|argv|readFile|writeFile|fileExists|deleteFile|error'
+  builtin_ident: 'unit|not|and|or|addi|subi|muli|divi|modi|negi|lti|leqi|gti|geqi|eqi|neqi|slli|srli|srai|arity|addf|subf|mulf|divf|negf|ltf|leqf|gtf|geqf|eqf|neqf|char2int|int2char|makeseq|length|concat|nth|cons|slice|reverse|print|dprint|argv|readFile|writeFile|fileExists|deleteFile|error|floorfi|ceilfi|roundfi'
   reserved_ident: 'if|then|else|let|match|with|lang|con|use|in|case|utest|lam'
   ident: '[a-zA-Z_][a-zA-Z_0-9]*'
   escapechar: '\\([?abfnrtv"\\]|'')'
@@ -34,6 +34,7 @@ contexts:
     - include: use
     - include: con
     - include: utest
+    - include: includeexpr
     - include: constant
     - include: parenthesis
     - include: identifier
@@ -47,6 +48,7 @@ contexts:
     - include: con-pushed
     - include: use-pushed
     - include: utest-pushed
+    - include: includeexpr-pushed
     - include: constant-pushed
     - include: parenthesis-pushed
     - include: identifier-pushed
@@ -79,7 +81,7 @@ contexts:
 
   comment-line-content:
     - match: '\s*([Tt][Oo][Dd][Oo])(:)?'
-      scope: keyword.other.todo.mcore
+      scope: comment.keyword.todo.mcore
     - match: '.*'
       scope: comment.line.mcore
 
@@ -223,12 +225,10 @@ contexts:
   fix:
     - match: '\b(fix)\b'
       scope: keyword.control.fix.mcore
-      push: [lparen-pushed]
 
   fix-pushed:
     - match: '\b(fix)\b'
       scope: keyword.control.fix.mcore
-      set: [lparen-pushed]
     - include: comment
 
   ## CON-EXPRESSION ##
@@ -362,6 +362,18 @@ contexts:
       scope: keyword.control.else.mcore
       pop: true
     - include: mexprs
+
+  ## INCLUDE-EXPRESSION ##
+  includeexpr:
+    - match: '\b(include)\b'
+      scope: keyword.control.include.mcore
+      push: [string-pushed]
+
+  includeexpr-pushed:
+    - match: '\b(include)\b'
+      scope: keyword.control.include.mcore
+      set: [string-pushed]
+    - include: comment
 
   ## IDENTIFIER-EXPRESSION ##
   identifier:
