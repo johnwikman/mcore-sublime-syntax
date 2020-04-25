@@ -1,3 +1,3 @@
-# mcore-sublime-syntax
+# Moved
 
-MCore syntax highlighting for Sublime Text 3.
+This repository has moved to [https://github.com/miking-lang/miking-sublime-text](https://github.com/miking-lang/miking-sublime-text).
